@@ -9,6 +9,17 @@ class Variable:
         self.data = data
         # 06
         self.grad = None
+        # 07
+        self.creator = None
+    def set_creator(self, func):
+        self.creator = func
+    # 07
+    def backward(self):
+        f = self.creator # 1. 함수를 가져온다.
+        if f is not None:
+            x = f.input # 2. 함수의 입력을 가져온다.
+            x.grad = f.backward(self.grad) # 3. 함수의 backward 메서드를 호출
+            x.backward() # 하나 앞 변수의 backward 메서드를 호출(재귀)
 
 # 02
 class Function:
@@ -16,8 +27,12 @@ class Function:
         x = input.data
         y = self.forward(x) # 구체적인 계산은 forward 메서드에서 한다
         output = Variable(y)
+        # 07
+        output.set_creator(self) # 출력 변수에 창조자를 설정한다.
         # 06
         self.input = input # 입력 변수를 기억(보관)한다.
+        # 07
+        self.output = output # 출력도 저장한다.
         return output
     def forward(self, x):
         raise NotImplementedError()

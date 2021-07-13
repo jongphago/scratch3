@@ -15,11 +15,21 @@ class Variable:
         self.creator = func
     # 07
     def backward(self):
-        f = self.creator # 1. 함수를 가져온다.
-        if f is not None:
-            x = f.input # 2. 함수의 입력을 가져온다.
-            x.grad = f.backward(self.grad) # 3. 함수의 backward 메서드를 호출
-            x.backward() # 하나 앞 변수의 backward 메서드를 호출(재귀)
+        '재귀를 이용하 구현'
+        # f = self.creator # 1. 함수를 가져온다.
+        # if f is not None:
+            # x = f.input # 2. 함수의 입력을 가져온다.
+            # x.grad = f.backward(self.grad) # 3. 함수의 backward 메서드를 호출
+            # x.backward() # 하나 앞 변수의 backward 메서드를 호출(재귀)
+        # 08
+        '반복문을 이용한 구현'
+        func = [self.creator]
+        while func:
+            f = func.pop()  # 함수를 가져온다.
+            x, y = f.input, f.output  # 함수의 입력과 출력을 가져온다
+            x.grad = f.backward(y.grad) # backward 메서드를 호출
+            if x.creator is not None:
+                func.append(x.creator)  # 하나 앞의 함수를 리스트에 추가
 
 # 02
 class Function:

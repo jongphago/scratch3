@@ -17,7 +17,7 @@ class Variable:
         self.creator = func
     # 07
     def backward(self):
-        '재귀를 이용하 구현'
+        '재귀를 이용한 구현'
         # f = self.creator # 1. 함수를 가져온다.
         # if f is not None:
             # x = f.input # 2. 함수의 입력을 가져온다.
@@ -38,20 +38,25 @@ class Variable:
 
 # 02
 class Function:
-    def __call__(self, input):
-        x = input.data
-        y = self.forward(x) # 구체적인 계산은 forward 메서드에서 한다
-        # 09
-        output = Variable(as_array(y))
-        # 07
-        output.set_creator(self) # 출력 변수에 창조자를 설정한다.
+    def __call__(self, inputs):
+        # x = input.data
+        # y = self.forward(x) # 구체적인 계산은 forward 메서드에서 한다
+        # 11
+        xs = [x.data for x in inputs]
+        ys = self.forward(xs)
+        outputs = [Variable(as_array(y)) for y in ys]
         # 06
-        self.input = input # 입력 변수를 기억(보관)한다.
+        self.inputs = inputs # 입력 변수를 기억(보관)한다.
+        # output = Variable(as_array(y))
         # 07
-        self.output = output # 출력도 저장한다.
-        return output
+        # output.set_creator(self) # 출력 변수에 창조자를 설정한다.
+        for output in outputs:
+            output.set_creator(self)
+        self.outputs = outputs # 출력도 저장한다.
+        return outputs
     def forward(self, x):
         raise NotImplementedError()
+    # 06
     def backward(self, gy):
         raise NotImplementedError()
 
@@ -97,3 +102,36 @@ def as_array(x):
     if np.isscalar(x):
         return np.array(x)
     return x
+
+# 10
+import unittest
+
+class SquareTest(unittest.TestCase):
+    def test_toward(self):
+        x = Variable(np.array(2.0))
+        y = square(x)
+        expected = np.array(4.0)
+        self.assertEqual(y.data, expected)
+
+    def test_backward(self):
+        x = Variable(np.array(3.))
+        y = square(x)
+        y.backward()
+        expected = np.array(6.0)
+        self.assertEqual(x.grad, expected)
+
+    def test_gradient_check(self):
+        x = Variable(np.random.rand(1))
+        y = square(x)
+        y.backward()
+        num_grad = numerical_diff(square, x)
+        flg = np.allclose(x.grad, num_grad)
+        self.assertTrue(flg)
+
+# 11
+class Add(Function):
+    def forward(self, xs):
+        x0, x1 = xs
+        y = x0 + x1
+        return (y,)
+        
